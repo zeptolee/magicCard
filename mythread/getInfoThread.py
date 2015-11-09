@@ -83,11 +83,12 @@ class GetInfoThread(threading.Thread):
             constant.STOREBOXNUM = int(self.soup.storebox['cur'])
             self.windows.storeBox = [0]*constant.STOREBOXNUM
         elif self.flag==constant.STOVEBOX:
-            self.windows.stealFriend = [0, 0]
             if constant.ISRED==0:
                 constant.SLOVENUM = int(self.soup.stovebox['cur'])-1
+                self.windows.stealFriend = [0]
             else:
                 constant.SLOVENUM = int(self.soup.stovebox['cur'])
+                self.windows.stealFriend = [0, 0]
             self.windows.stoveBox = [0]*constant.SLOVENUM
             self.cardcomplete = [0] * constant.SLOVENUM
             self.childlist = self.soup.stovebox.children
@@ -98,17 +99,22 @@ class GetInfoThread(threading.Thread):
             zcgInfos = json.loads(resultInfo)['puzi']
             print u'珍藏阁信息', zcgInfos
             for i,zcgInfo in enumerate(zcgInfos):
-                if zcgInfo['card_id']!=0:
-                    endtime = int(zcgInfo['begin'])+int(zcgInfo['smelt_time'])
-                    if int(time.time())-endtime>10:
-                        self.windows.czgComplete.append(1)
+                try:
+                    endpuzi =  int(zcgInfo['end'])
+                except KeyError:
+                    endpuzi = 9436421308
+                if int(time.time())<= endpuzi:
+                    if zcgInfo['card_id']!=0:
+                        endtime = int(zcgInfo['begin'])+int(zcgInfo['smelt_time'])
+                        if int(time.time())-endtime>10:
+                            self.windows.czgComplete.append(1)
+                        else:
+                            self.windows.czgComplete.append(0)
+                        x = time.localtime(endtime)
+                        self.timelist.append(time.strftime('%Y-%m-%d %H:%M:%S',x) )
                     else:
-                        self.windows.czgComplete.append(0)
-                    x = time.localtime(endtime)
-                    self.timelist.append(time.strftime('%Y-%m-%d %H:%M:%S',x) )
-                else:
-                    self.windows.czgComplete.append(-1)
-                self.windows.zcgInfoDic.append(zcgInfo['id'])
+                        self.windows.czgComplete.append(-1)
+                    self.windows.zcgInfoDic.append(zcgInfo['id'])
 
             print u'空珍藏阁信息',self.windows.zcgInfoDic
             print
